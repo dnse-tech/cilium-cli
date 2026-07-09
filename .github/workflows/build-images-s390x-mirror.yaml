@@ -54,6 +54,16 @@ jobs:
           case "$v" in v[0-9]*) ;; *) v="v0.19.5" ;; esac
           echo "version=$v" >> "$GITHUB_OUTPUT"
 
+      - name: Reset Docker context
+        # The self-hosted runner can carry a dangling "setup-docker-action"
+        # docker context from a previous job, whose meta.json has been cleaned
+        # up. That leaves the current-context pointer broken and makes
+        # setup-buildx-action fail with "context not found". Force back to the
+        # always-present default context before initialising Buildx.
+        run: |
+          docker context use default || true
+          docker context rm setup-docker-action -f 2>/dev/null || true
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
